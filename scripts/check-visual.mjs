@@ -26,6 +26,10 @@ async function snapshot(page) {
       overviewZoom: Number(canvas.dataset.overviewZoom),
       modelWidth: Number(canvas.dataset.modelWidth),
       folders: Number(canvas.dataset.folderCount),
+      silhouetteObjects: Number(canvas.dataset.silhouetteObjects),
+      structuralEdgeObjects: Number(canvas.dataset.structuralEdgeObjects),
+      structuralEdgeSegments: Number(canvas.dataset.structuralEdgeSegments),
+      outlineRaycastDisabled: canvas.dataset.outlineRaycastDisabled === 'true',
       brandOffset: Number(canvas.dataset.drawerBrandOffset),
       packagingOffset: Number(canvas.dataset.drawerPackagingOffset),
       ipOffset: Number(canvas.dataset.drawerIpOffset),
@@ -47,15 +51,17 @@ async function swipe(page, deltaY) {
 for (const [width, height] of [[375,812], [390,844], [430,932], [1440,1000]]) {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 2 });
   const errors = [];
+  const webglWarnings = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  page.on('console', message => { if (message.type() === 'warning' && /webgl/i.test(message.text())) webglWarnings.push(message.text()); });
   await page.goto(baseUrl);
   await page.waitForSelector('canvas[data-ready="true"]');
   await waitForState(page, 'CABINET_OVERVIEW');
   const overview = await snapshot(page);
-  const overviewName = width === 1440 ? 'desktop-1440x1000.png' : `overview-${width}x${height}.png`;
+  const overviewName = width === 1440 ? 'outline-desktop-1440x1000.png' : `outline-overview-${width}x${height}.png`;
   await page.screenshot({ path: `artifacts/${overviewName}`, fullPage: true });
-  if (errors.length || overview.overflow || overview.folders !== 24) throw new Error(JSON.stringify({ width, height, overview, errors }));
+  if (errors.length || webglWarnings.length > 4 || overview.overflow || overview.folders !== 24 || overview.structuralEdgeObjects < 70 || !overview.outlineRaycastDisabled) throw new Error(JSON.stringify({ width, height, overview, errors, webglWarnings }));
   if (width < 760 && (overview.modelWidth < width * .78 || overview.modelWidth > width * .85)) throw new Error(`Overview framing outside target: ${JSON.stringify(overview)}`);
 
   if (width === 390) {
@@ -64,26 +70,26 @@ for (const [width, height] of [[375,812], [390,844], [430,932], [1440,1000]]) {
     await waitForState(page, 'DRAWER_FOCUS', 'brand');
     const brand = await snapshot(page);
     if (!(brand.zoom > brand.overviewZoom && brand.brandOffset > .13)) throw new Error(`Brand focus failed: ${JSON.stringify(brand)}`);
-    await page.screenshot({ path: 'artifacts/drawer-brand-390x844.png', fullPage: true });
+    await page.screenshot({ path: 'artifacts/outline-brand-focus-390x844.png', fullPage: true });
 
     await swipe(page, -90);
     await waitForState(page, 'DRAWER_FOCUS', 'packaging');
     const packaging = await snapshot(page);
     if (Math.abs(packaging.brandOffset) > .01 || packaging.packagingOffset < .13) throw new Error(`Packaging switch failed: ${JSON.stringify(packaging)}`);
-    await page.screenshot({ path: 'artifacts/drawer-packaging-390x844.png', fullPage: true });
+    await page.screenshot({ path: 'artifacts/outline-packaging-focus-390x844.png', fullPage: true });
 
     await swipe(page, -90);
     await waitForState(page, 'DRAWER_FOCUS', 'ip');
     const ip = await snapshot(page);
     if (ip.ipOffset < .13) throw new Error(`IP switch failed: ${JSON.stringify(ip)}`);
-    await page.screenshot({ path: 'artifacts/drawer-ip-390x844.png', fullPage: true });
+    await page.screenshot({ path: 'artifacts/outline-ip-focus-390x844.png', fullPage: true });
 
     await page.getByRole('button', { name: 'ARCHIVE' }).click();
     await waitForState(page, 'CABINET_OVERVIEW');
     const restored = await snapshot(page);
     if (Math.abs(restored.zoom - restored.overviewZoom) > .01 || Math.max(Math.abs(restored.brandOffset), Math.abs(restored.packagingOffset), Math.abs(restored.ipOffset)) > .01) throw new Error(`Overview restore failed: ${JSON.stringify(restored)}`);
-    results.push({ width, height, overview, brand, packaging, ip, restored, errors });
-  } else results.push({ width, height, overview, errors });
+    results.push({ width, height, overview, brand, packaging, ip, restored, errors, webglWarnings });
+  } else results.push({ width, height, overview, errors, webglWarnings });
   await page.close();
 }
 

@@ -1,10 +1,42 @@
 import * as THREE from 'three';
 
-// Screen-space inverted hulls outline silhouettes without exposing bevel topology.
-export function addOutlines(scene: THREE.Object3D) {
-  const hullMaterial = new THREE.ShaderMaterial({
+type OutlineConfig = {
+  pattern: RegExp;
+  threshold: number;
+  role: 'cabinet' | 'drawer' | 'folder' | 'rail' | 'personnel' | 'slot' | 'work-card';
+};
+
+const STRUCTURAL_CONFIGS: OutlineConfig[] = [
+  { pattern: /^Cabinet_Body_Mesh(?:_\d+)?$/, threshold: 50, role: 'cabinet' },
+  { pattern: /^Drawer_(Brand|Packaging|IP)_Mesh(?:_\d+)?$/, threshold: 45, role: 'drawer' },
+  { pattern: /^Folder_.*_(Front|Back)$/, threshold: 45, role: 'folder' },
+  { pattern: /^Rail_(Brand|Packaging|IP)_(Left|Right)$/, threshold: 45, role: 'rail' },
+  { pattern: /^PersonnelModule_Body_Rounded_Mesh(?:_\d+)?$/, threshold: 45, role: 'personnel' },
+  { pattern: /^(CardSlot|CardSlot_Accent|PaperExit)$/, threshold: 45, role: 'slot' },
+  { pattern: /^WorkCard_(Body|Clip)$/, threshold: 45, role: 'work-card' },
+];
+
+const SILHOUETTE_SKIP = [
+  /^Module_.*Label$/,
+  /^LED_/,
+  /^Rail_/,
+  /^Label_Plate_/,
+  /_RuntimeSurface$/,
+];
+
+function collectMeshes(scene: THREE.Object3D) {
+  const meshes: THREE.Mesh[] = [];
+  scene.traverse(node => { if (node instanceof THREE.Mesh) meshes.push(node); });
+  return meshes;
+}
+
+function addSilhouetteOutlines(meshes: THREE.Mesh[]) {
+  const material = new THREE.ShaderMaterial({
     uniforms: { resolution: { value: new THREE.Vector2(390, 440) }, thickness: { value: 1.25 } },
-    side: THREE.BackSide, depthWrite: false,
+    side: THREE.BackSide,
+    depthTest: true,
+    depthWrite: false,
+    toneMapped: false,
     vertexShader: `uniform vec2 resolution; uniform float thickness;
       void main() {
         vec4 p = modelViewMatrix * vec4(position, 1.0);
@@ -18,32 +50,73 @@ export function addOutlines(scene: THREE.Object3D) {
       }`,
     fragmentShader: `void main() { gl_FragColor = vec4(0.055, 0.065, 0.045, 1.0); }`,
   });
-  const meshes: THREE.Mesh[] = [];
-  scene.traverse(node => { if (node instanceof THREE.Mesh) meshes.push(node); });
+
+  let count = 0;
   for (const mesh of meshes) {
-    if (/Module_.*Label|LED_|Rail_|Label_Plate/.test(mesh.name)) continue;
-    const hull = new THREE.Mesh(mesh.geometry, hullMaterial);
-    hull.name = `${mesh.name}_RuntimeOutline`; hull.raycast = () => {};
+    if (SILHOUETTE_SKIP.some(pattern => pattern.test(mesh.name))) continue;
+    const hull = new THREE.Mesh(mesh.geometry, material);
+    hull.name = `${mesh.name}_RuntimeSilhouette`;
+    hull.renderOrder = 1;
+    hull.raycast = () => {};
+    hull.userData.outlineLevel = 'silhouette';
+    hull.userData.raycastDisabled = true;
     mesh.add(hull);
+    count += 1;
   }
-  // The cabinet shell has subdivided bevels. A bounds-derived outline-only proxy
-  // supplies three structural seams without replacing or changing its geometry.
-  const body = scene.getObjectByName('Cabinet_Body');
-  if (body) {
-    const box = new THREE.Box3().setFromObject(body);
-    const a=box.min, b=box.max, e=.001;
-    const vertices = [
-      a.x,b.y+e,b.z+e, b.x+e,b.y+e,b.z+e,
-      b.x+e,b.y+e,b.z+e, b.x+e,a.y,b.z+e,
-      b.x+e,b.y+e,b.z+e, b.x+e,b.y+e,a.z,
-    ];
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
-    const seams = new THREE.LineSegments(geometry,new THREE.LineBasicMaterial({color:'#35392e'}));
-    // Convert world coordinates to the original body hierarchy so seams follow it.
-    const positions = geometry.getAttribute('position');
-    for(let i=0;i<positions.count;i++) { const p=body.worldToLocal(new THREE.Vector3().fromBufferAttribute(positions,i)); positions.setXYZ(i,p.x,p.y,p.z); }
-    seams.name='Cabinet_RuntimeStructuralSeams'; seams.raycast=()=>{}; body.add(seams);
+  return { material, count };
+}
+
+function addStructuralEdges(meshes: THREE.Mesh[]) {
+  const material = new THREE.LineBasicMaterial({
+    color: '#35392e',
+    transparent: true,
+    opacity: .82,
+    depthTest: true,
+    depthWrite: false,
+    toneMapped: false,
+  });
+  let objectCount = 0;
+  let segmentCount = 0;
+
+  for (const mesh of meshes) {
+    const config = STRUCTURAL_CONFIGS.find(candidate => candidate.pattern.test(mesh.name));
+    if (!config) continue;
+    const geometry = new THREE.EdgesGeometry(mesh.geometry, config.threshold);
+    const edges = new THREE.LineSegments(geometry, material);
+    edges.name = `${mesh.name}_RuntimeStructuralEdges`;
+    edges.renderOrder = 2;
+    edges.raycast = () => {};
+    edges.userData.outlineLevel = 'structural';
+    edges.userData.outlineRole = config.role;
+    edges.userData.thresholdAngle = config.threshold;
+    edges.userData.raycastDisabled = true;
+    mesh.add(edges);
+    objectCount += 1;
+    segmentCount += geometry.getAttribute('position').count / 2;
   }
-  return hullMaterial;
+  return { material, objectCount, segmentCount };
+}
+
+function addSpecialProxies() {
+  // Reserved for genuinely non-derivable structural lines. The refined
+  // EdgesGeometry pass covers the current GLB, so no proxy is required.
+  return { objectCount: 0 };
+}
+
+export function addOutlineSystem(scene: THREE.Object3D) {
+  const meshes = collectMeshes(scene);
+  const silhouette = addSilhouetteOutlines(meshes);
+  const structural = addStructuralEdges(meshes);
+  const special = addSpecialProxies();
+
+  // EdgesGeometry recovers the cabinet's important face transitions, so the
+  // previous bounds-derived world-space seam proxy is intentionally removed.
+  return {
+    silhouetteMaterial: silhouette.material,
+    structuralMaterial: structural.material,
+    silhouetteCount: silhouette.count,
+    structuralObjectCount: structural.objectCount,
+    structuralSegmentCount: structural.segmentCount,
+    specialProxyCount: special.objectCount,
+  };
 }

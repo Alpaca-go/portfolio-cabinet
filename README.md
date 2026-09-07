@@ -1,6 +1,6 @@
 # Wang Qi — Design Archive
 
-Current milestone: P1.1 visual crispness and P2 drawer focus from the supplied development briefs.
+Current milestone: P2R outline system refinement on the P1.1/P2 drawer-focus baseline.
 
 ## Run
 
@@ -15,7 +15,7 @@ Open the local URL printed by Vite. Production build: `npm run build`.
 
 - Original GLB at `public/archive-cabinet-v7.glb`, copied without modification.
 - React + React Three Fiber + Three.js; orthographic camera fitted to projected model bounds.
-- Unlit original material colors; screen-space inverted hull contours and a bounds-derived structural line proxy.
+- Unlit original material colors; screen-space inverted hull contours plus selective hierarchy-bound structural edges.
 - CanvasTexture drawer labels and work-card face attached to original anchors.
 - Mobile-first layout, demand rendering, device pixel ratio capped at 2.
 - GSAP drawer focus, direct category selection, vertical swipe switching, and overview return.
@@ -26,6 +26,7 @@ All original GLB nodes, folder hinges, slot anchors, and the paper-exit anchor r
 
 - P1.1 Visual Crispness — COMPLETE
 - P2 Drawer Focus — COMPLETE
+- P2R Outline System Refinement — COMPLETE
 - P3 Folder Transition — NOT STARTED
 
 ## Source files
@@ -35,7 +36,7 @@ All original GLB nodes, folder hinges, slot anchors, and the paper-exit anchor r
 - `src/components/archive/ArchiveCameraController.ts`: overview framing and focus camera states.
 - `src/components/archive/DrawerController.ts`: drawer roots, local-axis pull, and hit lookup.
 - `src/hooks/useArchiveInteraction.ts`: explicit archive interaction state.
-- `src/components/archive/OutlineSystem.ts`: silhouette and internal linework.
+- `src/components/archive/OutlineSystem.ts`: 1.25px inverted-hull silhouettes, 50° cabinet structural edges, and selective 45° edges for drawers, folders, rails, the personnel module, slots, paper output, and work card.
 - `src/components/archive/GraphicSurfaces.ts`: runtime labels and ID placeholder.
 - `src/styles/global.css`: mobile-first editorial layout.
 

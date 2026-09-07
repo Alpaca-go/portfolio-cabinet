@@ -5,7 +5,7 @@ import { gsap } from 'gsap';
 import * as THREE from 'three';
 import type { ArchiveInteraction } from '../../hooks/useArchiveInteraction';
 import { addGraphicSurfaces } from './GraphicSurfaces';
-import { addOutlines } from './OutlineSystem';
+import { addOutlineSystem } from './OutlineSystem';
 import { addCameraTween, configureOverviewCamera, getDrawerFocusState, type CameraState } from './ArchiveCameraController';
 import { addDrawerTweens, findDrawerId, findFolderRoot, readDrawerSetup } from './DrawerController';
 
@@ -33,7 +33,7 @@ export function CabinetModel({ interaction, suppressClickUntil }: Props) {
       node.material = Array.isArray(node.material) ? node.material.map(flatten) : flatten(node.material);
     });
     const bounds = new THREE.Box3().setFromObject(scene);
-    const outline = addOutlines(scene);
+    const outline = addOutlineSystem(scene);
     addGraphicSurfaces(scene);
     return { scene, bounds, outline, drawers: readDrawerSetup(scene) };
   }, [gltf]);
@@ -48,6 +48,11 @@ export function CabinetModel({ interaction, suppressClickUntil }: Props) {
     canvas.dataset.overviewZoom = overview.current?.zoom.toFixed(4) ?? '';
     canvas.dataset.modelWidth = overview.current?.projectedWidth.toFixed(2) ?? '';
     canvas.dataset.folderCount = String(gltf.scene.getObjectsByProperty('type', 'Object3D').filter(n => /^Folder_.*_ROOT$/.test(n.name)).length);
+    canvas.dataset.silhouetteObjects = String(prepared.outline.silhouetteCount);
+    canvas.dataset.structuralEdgeObjects = String(prepared.outline.structuralObjectCount);
+    canvas.dataset.structuralEdgeSegments = String(prepared.outline.structuralSegmentCount);
+    canvas.dataset.specialOutlineProxies = String(prepared.outline.specialProxyCount);
+    canvas.dataset.outlineRaycastDisabled = String(prepared.scene.getObjectsByProperty('type', 'LineSegments').every(node => node.userData.raycastDisabled === true));
     for (const [id, drawer] of Object.entries(prepared.drawers)) {
       canvas.dataset[`drawer${id[0].toUpperCase()}${id.slice(1)}Offset`] = (drawer.root.position.z - drawer.initial.z).toFixed(4);
     }
@@ -58,7 +63,7 @@ export function CabinetModel({ interaction, suppressClickUntil }: Props) {
     if (!initialized.current || (!interaction.activeDrawer && !interaction.isTransitioning)) {
       overview.current = configureOverviewCamera(ortho, prepared.bounds, size.width, size.height);
       cameraTarget.current.copy(overview.current.target);
-      prepared.outline.uniforms.resolution.value.set(size.width, size.height);
+      prepared.outline.silhouetteMaterial.uniforms.resolution.value.set(size.width, size.height);
       initialized.current = true;
       updateDiagnostics();
       invalidate();
