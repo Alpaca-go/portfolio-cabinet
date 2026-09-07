@@ -3,7 +3,7 @@ import * as THREE from 'three';
 // Screen-space inverted hulls outline silhouettes without exposing bevel topology.
 export function addOutlines(scene: THREE.Object3D) {
   const hullMaterial = new THREE.ShaderMaterial({
-    uniforms: { resolution: { value: new THREE.Vector2(390, 440) }, thickness: { value: 1.0 } },
+    uniforms: { resolution: { value: new THREE.Vector2(390, 440) }, thickness: { value: 1.25 } },
     side: THREE.BackSide, depthWrite: false,
     vertexShader: `uniform vec2 resolution; uniform float thickness;
       void main() {
