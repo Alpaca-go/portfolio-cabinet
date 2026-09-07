@@ -1,6 +1,6 @@
 # Wang Qi — Design Archive
 
-First deliverable: Phase 1 static visual baseline from the supplied development brief.
+Current milestone: P1.1 visual crispness and P2 drawer focus from the supplied development briefs.
 
 ## Run
 
@@ -17,14 +17,24 @@ Open the local URL printed by Vite. Production build: `npm run build`.
 - React + React Three Fiber + Three.js; orthographic camera fitted to projected model bounds.
 - Unlit original material colors; screen-space inverted hull contours and a bounds-derived structural line proxy.
 - CanvasTexture drawer labels and work-card face attached to original anchors.
-- Mobile-first layout, demand rendering, device pixel ratio capped at 1.5.
-- No motion or interactive navigation in this review milestone.
+- Mobile-first layout, demand rendering, device pixel ratio capped at 2.
+- GSAP drawer focus, direct category selection, vertical swipe switching, and overview return.
 
-The footer lists categories as text, not inactive buttons. All original GLB nodes, folder hinges, slot anchors, and the paper-exit anchor remain available. Phase 2 (drawer focus) is intentionally deferred until visual approval per the brief.
+All original GLB nodes, folder hinges, slot anchors, and the paper-exit anchor remain available. Folder surfaces are identified as complete hit targets, but P3 folder extraction is intentionally absent.
+
+## Milestone status
+
+- P1.1 Visual Crispness — COMPLETE
+- P2 Drawer Focus — COMPLETE
+- P3 Folder Transition — NOT STARTED
 
 ## Source files
 
-- `src/components/archive/ArchiveScene.tsx`: GLB loading, flat materials, responsive framing.
+- `src/components/archive/ArchiveScene.tsx`: Canvas shell, swipe handling, and HTML navigation.
+- `src/components/archive/CabinetModel.tsx`: GLB loading, flat materials, and node access.
+- `src/components/archive/ArchiveCameraController.ts`: overview framing and focus camera states.
+- `src/components/archive/DrawerController.ts`: drawer roots, local-axis pull, and hit lookup.
+- `src/hooks/useArchiveInteraction.ts`: explicit archive interaction state.
 - `src/components/archive/OutlineSystem.ts`: silhouette and internal linework.
 - `src/components/archive/GraphicSurfaces.ts`: runtime labels and ID placeholder.
 - `src/styles/global.css`: mobile-first editorial layout.
@@ -33,5 +43,5 @@ The ID portrait is a graphic placeholder. No project descriptions or personal co
 
 ## Visual check
 
-`npm run check:visual` uses Playwright with installed Microsoft Edge and expects the local Vite server on port 5174. Captures 375×812, 390×844, 430×932, and desktop screenshots in `artifacts/`, checks GLB readiness, JavaScript errors, overflow, and framing.
+`npm run check:visual` starts an isolated Vite test server and uses Playwright with installed Microsoft Edge (an existing server can be supplied with `VISUAL_URL`). It captures all required overview and drawer-focus screenshots in `artifacts/`, and verifies GLB readiness, state transitions, drawer transforms, camera zoom, overview restoration, JavaScript errors, overflow, and framing.
 

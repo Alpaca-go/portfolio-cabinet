@@ -17,7 +17,20 @@ h1 { font-size: clamp(36px, 9.6vw, 52px); font-weight: 500; letter-spacing: -1.8
 .intro-note { margin: 15px 0 0; font-size: 11px; letter-spacing: 1.2px; color: #818378; }
 .cabinet-stage { flex: 1; position: relative; min-height: 360px; height: 440px; margin: 17px -24px 0; }
 .scene-shell { position: absolute; inset: 0; }
+.scene-shell.is-focused { touch-action: none; }
 .scene-shell canvas { display: block; }
+.drawer-navigation { position: absolute; inset: 0; pointer-events: none; font: 8px "Courier New", monospace; letter-spacing: 1px; color: #73786b; }
+.drawer-navigation button { pointer-events: auto; appearance: none; border: 0; color: inherit; background: rgba(244,243,238,.88); font: inherit; cursor: pointer; }
+.drawer-navigation button:disabled { cursor: default; }
+.archive-return { position: absolute; left: 24px; top: 18px; padding: 8px 9px; }
+.drawer-indicator { position: absolute; right: 17px; top: 50%; transform: translateY(-50%); display: grid; gap: 2px; }
+.drawer-indicator button { width: 42px; height: 35px; display: flex; align-items: center; justify-content: flex-end; gap: 7px; padding: 0 7px; }
+.drawer-indicator i { display: block; width: 6px; height: 6px; border: 1px solid #92978a; border-radius: 50%; }
+.drawer-indicator .is-active { color: #292c27; }
+.drawer-indicator .is-active i { border-color: #829448; background: #829448; }
+.active-drawer-label { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); white-space: nowrap; background: rgba(244,243,238,.88); padding: 7px 10px; color: #707568; }
+.cabinet-stage:has(.scene-shell.is-focused) .stage-index,
+.cabinet-stage:has(.scene-shell.is-focused) .stage-caption { opacity: 0; }
 .stage-index { position: absolute; left: 24px; top: 18px; font: 8px "Courier New", monospace; letter-spacing: 1px; color: #a2a499; }
 .stage-caption { pointer-events: none; position: absolute; bottom: 21px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 10px; color: #909487; font: 8px "Courier New", monospace; letter-spacing: 1.25px; }
 .caption-line { width: 17px; height: 1px; background: #bbbfb1; }
@@ -29,4 +42,5 @@ h1 { font-size: clamp(36px, 9.6vw, 52px); font-weight: 500; letter-spacing: -1.8
 .scene-message { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 10px; color: #787e6c; font-size: 12px; }
 .scene-message small { font: 9px "Courier New", monospace; letter-spacing: 1px; }
 @media (min-width: 760px) { .archive-page { padding: 34px 52px 26px; } .identity-caption,.edition { font-size: 10px; } .intro { padding-top: 49px; text-align: center; } .eyebrow { justify-content: center; } h1 { font-size: 58px; letter-spacing: -2.5px; } .cabinet-stage { min-height: 400px; height: 500px; margin: 0; } .stage-index { left: 0; top: 34px; } .archive-footer { margin-top: 0; } .collection-index { justify-content: center; gap: 60px; font-size: 10px; } .colophon { font-size: 9px; } }
+@media (min-width: 760px) { .archive-return { left: 0; top: 34px; } .drawer-indicator { right: 0; } }
 @media (max-height: 740px) and (max-width: 759px) { .intro { padding-top: 34px; } .cabinet-stage { min-height: 310px; } }
