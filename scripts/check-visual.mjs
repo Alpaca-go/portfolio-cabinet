@@ -84,7 +84,7 @@ for (const [width, height] of [[375,812], [390,844], [430,932], [1440,1000]]) {
     if (ip.ipOffset < .13) throw new Error(`IP switch failed: ${JSON.stringify(ip)}`);
     await page.screenshot({ path: 'artifacts/outline-ip-focus-390x844.png', fullPage: true });
 
-    await page.getByRole('button', { name: 'ARCHIVE' }).click();
+    await page.mouse.click(8, 8);
     await waitForState(page, 'CABINET_OVERVIEW');
     const restored = await snapshot(page);
     if (Math.abs(restored.zoom - restored.overviewZoom) > .01 || Math.max(Math.abs(restored.brandOffset), Math.abs(restored.packagingOffset), Math.abs(restored.ipOffset)) > .01) throw new Error(`Overview restore failed: ${JSON.stringify(restored)}`);

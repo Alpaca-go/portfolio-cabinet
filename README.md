@@ -1,6 +1,6 @@
 # Wang Qi — Design Archive
 
-Current milestone: P2R outline system refinement on the P1.1/P2 drawer-focus baseline.
+Current presentation: the restored sharp-folder GLB displayed alone on a full-viewport canvas.
 
 ## Run
 
@@ -13,12 +13,14 @@ Open the local URL printed by Vite. Production build: `npm run build`.
 
 ## Scope
 
-- Original GLB at `public/archive-cabinet-v7.glb`, copied without modification.
+- Restored sharp-folder GLB at `public/archive-cabinet-v7.glb`, copied without modification from `archive-cabinet-v7-sharp-restored-folders.glb`.
 - React + React Three Fiber + Three.js; orthographic camera fitted to projected model bounds.
 - Unlit original material colors; screen-space inverted hull contours plus selective hierarchy-bound structural edges.
 - CanvasTexture drawer labels and work-card face attached to original anchors.
 - Mobile-first layout, demand rendering, device pixel ratio capped at 2.
-- GSAP drawer focus, direct category selection, vertical swipe switching, and overview return.
+- GSAP drawer focus and vertical swipe switching remain on the cabinet itself; clicking empty canvas space returns to overview.
+
+The rendered page contains only the cabinet canvas. Header, introduction, captions, category indicator, return control, and footer have been removed.
 
 All original GLB nodes, folder hinges, slot anchors, and the paper-exit anchor remain available. Folder surfaces are identified as complete hit targets, but P3 folder extraction is intentionally absent.
 

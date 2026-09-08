@@ -1,16 +1,14 @@
 import { Component, Suspense, useRef, type PointerEvent, type ReactNode } from 'react';
 import { Canvas } from '@react-three/fiber';
 import * as THREE from 'three';
-import { DRAWER_ORDER, useArchiveInteraction, type DrawerId } from '../../hooks/useArchiveInteraction';
+import { DRAWER_ORDER, useArchiveInteraction } from '../../hooks/useArchiveInteraction';
 import { CabinetModel } from './CabinetModel';
 
 class SceneBoundary extends Component<{children: ReactNode}, {failed: boolean}> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
-  render() { return this.state.failed ? <div className="scene-message" role="alert">模型暂时无法显示。<small>请刷新页面，或使用支持 WebGL 的浏览器。</small></div> : this.props.children; }
+  render() { return this.state.failed ? null : this.props.children; }
 }
-
-const labels: Record<DrawerId, string> = { brand: 'BRAND DESIGN', packaging: 'PACKAGING DESIGN', ip: 'IP / ILLUSTRATION' };
 
 export function ArchiveScene() {
   const interaction = useArchiveInteraction();
@@ -32,21 +30,11 @@ export function ArchiveScene() {
     interaction.switchDrawer(DRAWER_ORDER[next]);
   };
   const focused = interaction.mode !== 'CABINET_OVERVIEW' || interaction.isTransitioning;
-
   return <div className={`scene-shell${focused ? ' is-focused' : ''}`} data-state={interaction.mode} data-active-drawer={interaction.activeDrawer ?? ''} onPointerDown={onPointerDown} onPointerUp={onPointerUp} onPointerCancel={() => { pointerStart.current = null; }}>
-    <SceneBoundary><Suspense fallback={<div className="scene-message" role="status">正在整理档案…<small>LOADING THE ARCHIVE</small></div>}>
-      <Canvas orthographic frameloop="demand" dpr={[1, 2]} gl={{ antialias: true, alpha: true, toneMapping: THREE.NoToneMapping }} fallback={<div className="scene-message">请使用支持 WebGL 的浏览器查看档案柜。</div>}>
+    <SceneBoundary><Suspense fallback={null}>
+      <Canvas orthographic frameloop="demand" dpr={[1, 2]} gl={{ antialias: true, alpha: true, toneMapping: THREE.NoToneMapping }} fallback={null} onPointerMissed={interaction.returnToOverview}>
         <CabinetModel interaction={interaction} suppressClickUntil={suppressClickUntil}/>
       </Canvas>
     </Suspense></SceneBoundary>
-    {focused && <div className="drawer-navigation" aria-label="档案分类导航">
-      <button className="archive-return" type="button" onClick={interaction.returnToOverview} disabled={interaction.isTransitioning}>← ARCHIVE</button>
-      <div className="drawer-indicator">
-        {DRAWER_ORDER.map((drawer, index) => <button key={drawer} type="button" className={interaction.activeDrawer === drawer ? 'is-active' : ''} aria-label={`查看 ${labels[drawer]}`} aria-current={interaction.activeDrawer === drawer ? 'true' : undefined} disabled={interaction.isTransitioning} onClick={() => interaction.switchDrawer(drawer)}>
-          <span>{String(index + 1).padStart(2, '0')}</span><i aria-hidden="true"/>
-        </button>)}
-      </div>
-      <div className="active-drawer-label" aria-live="polite">{interaction.activeDrawer ? labels[interaction.activeDrawer] : ''}</div>
-    </div>}
   </div>;
 }

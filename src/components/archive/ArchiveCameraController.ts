@@ -15,7 +15,7 @@ export function configureOverviewCamera(camera: THREE.OrthographicCamera, bounds
   camera.position.copy(position); camera.lookAt(target);
   camera.left = -width / 2; camera.right = width / 2; camera.top = height / 2; camera.bottom = -height / 2; camera.near = .1; camera.far = 50;
   const dimensions = projectedDimensions(camera, bounds);
-  const targetWidth = Math.min(width * .82, 480);
+  const targetWidth = Math.min(width * .82, 720);
   camera.zoom = Math.min(targetWidth / dimensions.x, height * .92 / dimensions.y);
   camera.updateProjectionMatrix();
   return { position, target, zoom: camera.zoom, projectedWidth: dimensions.x * camera.zoom };

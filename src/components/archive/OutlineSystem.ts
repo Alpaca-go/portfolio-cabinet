@@ -7,11 +7,11 @@ type OutlineConfig = {
 };
 
 const STRUCTURAL_CONFIGS: OutlineConfig[] = [
-  { pattern: /^Cabinet_Body_Mesh(?:_\d+)?$/, threshold: 50, role: 'cabinet' },
-  { pattern: /^Drawer_(Brand|Packaging|IP)_Mesh(?:_\d+)?$/, threshold: 45, role: 'drawer' },
+  { pattern: /^Cabinet_Body(?:_Mesh)?(?:_\d+)?$/, threshold: 50, role: 'cabinet' },
+  { pattern: /^Drawer_(Brand|Packaging|IP)(?:_Sharp)?_Mesh(?:_\d+)?$/, threshold: 45, role: 'drawer' },
   { pattern: /^Folder_.*_(Front|Back)$/, threshold: 45, role: 'folder' },
   { pattern: /^Rail_(Brand|Packaging|IP)_(Left|Right)$/, threshold: 45, role: 'rail' },
-  { pattern: /^PersonnelModule_Body_Rounded_Mesh(?:_\d+)?$/, threshold: 45, role: 'personnel' },
+  { pattern: /^PersonnelModule_Body(?:_Rounded_Mesh)?(?:_\d+)?$/, threshold: 45, role: 'personnel' },
   { pattern: /^(CardSlot|CardSlot_Accent|PaperExit)$/, threshold: 45, role: 'slot' },
   { pattern: /^WorkCard_(Body|Clip)$/, threshold: 45, role: 'work-card' },
 ];
